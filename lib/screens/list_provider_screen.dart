@@ -5,11 +5,11 @@ import '../widgets/provider_card.dart';
 import '../models/proveedor.dart';
 
 class ListProviderScreen extends StatelessWidget {
-  const ListProviderScreen({super.key});
+  const ListProviderScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final providerService = Provider.of<ProviderService>(context);
+    final service = Provider.of<ProviderService>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -17,19 +17,27 @@ class ListProviderScreen extends StatelessWidget {
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
-      body: providerService.isLoading
+      body: service.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: providerService.proveedores.length,
-              itemBuilder: (_, i) => GestureDetector(
-                onTap: () {
-                  providerService.selectedProvider =
-                      providerService.proveedores[i];
-                  Navigator.pushNamed(context, 'proveedor_edit');
+          : RefreshIndicator(
+              onRefresh: service.loadProviders,
+              child: ListView.builder(
+                itemCount: service.proveedores.length,
+                itemBuilder: (_, i) {
+                  final p = service.proveedores[i];
+                  return GestureDetector(
+                    onTap: () {
+                      service.selectedProvider = p;
+                      Navigator.pushNamed(context, 'proveedor_edit');
+                    },
+                    child: ProviderCard(
+                      nombre: p.providerName,
+                      apellido: p.providerLastName,
+                      correo: p.providerMail,
+                      estado: p.providerState,
+                    ),
+                  );
                 },
-                child: ProviderCard(
-                  nombre: providerService.proveedores[i].providerName,
-                ),
               ),
             ),
       floatingActionButton: FloatingActionButton(
@@ -37,8 +45,13 @@ class ListProviderScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
         onPressed: () {
-          providerService.selectedProvider =
-              Proveedor(proveedorId: 0, providerName: '');
+          service.selectedProvider = Proveedor(
+            proveedorId: 0,
+            providerName: '',
+            providerLastName: '',
+            providerMail: '',
+            providerState: 'Activo',
+          );
           Navigator.pushNamed(context, 'proveedor_edit');
         },
       ),

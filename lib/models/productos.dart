@@ -1,43 +1,38 @@
 import 'dart:convert';
 
-class Product {
-  List<Listado> listado;
+Listado listadoFromJson(String str) =>
+    Listado.fromJson(json.decode(str));
 
-  Product({required this.listado});
-
-  factory Product.fromJson(String str) =>
-      Product.fromMap(json.decode(str));
-
-  factory Product.fromMap(Map<String, dynamic> json) => Product(
-        listado: List<Listado>.from(
-            json["listado"].map((x) => Listado.fromMap(x))),
-      );
-}
+String listadoToJson(Listado data) => json.encode(data.toJson());
 
 class Listado {
   int productId;
   String productName;
-  double price;
-  int stock;
+  double productPrice;
+  String productImage;
+  String productState;
 
   Listado({
     required this.productId,
     required this.productName,
-    required this.price,
-    required this.stock,
+    required this.productPrice,
+    required this.productImage,
+    required this.productState,
   });
 
-  factory Listado.fromMap(Map<String, dynamic> json) => Listado(
-        productId: int.parse(json["product_id"].toString()),
-        productName: json["product_name"],
-        price: double.parse(json["price"].toString()),
-        stock: int.parse(json["stock"].toString()),
+  factory Listado.fromJson(Map<String, dynamic> json) => Listado(
+        productId: json["product_id"] as int,
+        productName: json["product_name"] as String,
+        productPrice: (json["product_price"] as num).toDouble(),
+        productImage: json["product_image"] as String,
+        productState: json["product_state"] as String,
       );
 
   Map<String, dynamic> toJson() => {
         "product_id": productId,
         "product_name": productName,
-        "price": price,
-        "stock": stock,
+        "product_price": productPrice,
+        "product_image": productImage,
+        "product_state": productState,
       };
 }

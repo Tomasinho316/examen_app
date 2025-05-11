@@ -1,35 +1,30 @@
 import 'dart:convert';
 
-class Category {
-  List<Detalle> detalle;
+Categoria categoriaFromJson(String str) =>
+    Categoria.fromJson(json.decode(str));
 
-  Category({
-    required this.detalle,
-  });
+String categoriaToJson(Categoria data) => json.encode(data.toJson());
 
-    factory Category.fromJson(Map<String, dynamic> json) => Category(
-        detalle: json['detalle'] != null
-            ? List<Detalle>.from(json['detalle'].map((x) => Detalle.fromJson(x)))
-            : [],
-    );
-}
-
-class Detalle {
+class Categoria {
   int categoryId;
   String categoryName;
+  String categoryState;
 
-  Detalle({
+  Categoria({
     required this.categoryId,
     required this.categoryName,
+    required this.categoryState,
   });
 
-  factory Detalle.fromJson(Map<String, dynamic> json) => Detalle(
-        categoryId: json["category_id"],
-        categoryName: json["category_name"],
+  factory Categoria.fromJson(Map<String, dynamic> json) => Categoria(
+        categoryId: json["category_id"] as int,
+        categoryName: json["category_name"] as String,
+        categoryState: json["category_state"] as String,
       );
 
   Map<String, dynamic> toJson() => {
         "category_id": categoryId,
         "category_name": categoryName,
+        "category_state": categoryState,
       };
 }

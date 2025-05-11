@@ -2,24 +2,23 @@ import 'package:flutter/material.dart';
 import '../models/categoria.dart';
 
 class CategoryCard extends StatelessWidget {
-  final Detalle category;
+  final Categoria category;
 
-  const CategoryCard({super.key, required this.category});
+  const CategoryCard({Key? key, required this.category}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        leading: const Icon(Icons.category, color: Colors.blueAccent),
+        leading: const Icon(Icons.category, color: Colors.indigo),
         title: Text(
           category.categoryName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        trailing: const Icon(Icons.edit, color: Colors.grey),
+        subtitle: Text('Estado: ${category.categoryState}'),
+        trailing: const Icon(Icons.arrow_forward_ios),
       ),
     );
   }

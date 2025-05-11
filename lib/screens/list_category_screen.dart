@@ -5,43 +5,43 @@ import '../widgets/category_card.dart';
 import '../models/categoria.dart';
 
 class ListCategoryScreen extends StatelessWidget {
-  const ListCategoryScreen({super.key});
+  const ListCategoryScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final categoryService = Provider.of<CategoryService>(context);
-    final categories = categoryService.categories;
+    final service = Provider.of<CategoryService>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Listado de Categorías'),
+        title: const Text('Categorías'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
-      body: categoryService.isLoading
+      body: service.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: categories.length,
-              itemBuilder: (context, i) {
-                final Detalle category = categories[i];
-                return GestureDetector(
-                  onTap: () {
-                    categoryService.selectedCategory = Detalle(
-                      categoryId: category.categoryId,
-                      categoryName: category.categoryName,
-                    );
-                    Navigator.pushNamed(context, 'edit_category');
-                  },
-                  child: CategoryCard(category: category),
-                );
-              },
+          : RefreshIndicator(
+              onRefresh: service.loadCategories,
+              child: ListView.builder(
+                itemCount: service.categories.length,
+                itemBuilder: (_, i) {
+                  final c = service.categories[i];
+                  return GestureDetector(
+                    onTap: () {
+                      service.selectedCategory = c;
+                      Navigator.pushNamed(context, 'edit_category');
+                    },
+                    child: CategoryCard(category: c),
+                  );
+                },
+              ),
             ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
         onPressed: () {
-          categoryService.selectedCategory = Detalle(categoryId: 0, categoryName: '');
+          service.selectedCategory =
+              Categoria(categoryId: 0, categoryName: '', categoryState: 'Activa');
           Navigator.pushNamed(context, 'edit_category');
         },
       ),

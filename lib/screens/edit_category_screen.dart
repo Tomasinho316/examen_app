@@ -4,83 +4,112 @@ import '../services/category_service.dart';
 import '../models/categoria.dart';
 
 class EditCategoryScreen extends StatefulWidget {
-  const EditCategoryScreen({super.key});
+  const EditCategoryScreen({Key? key}) : super(key: key);
 
   @override
   State<EditCategoryScreen> createState() => _EditCategoryScreenState();
 }
 
 class _EditCategoryScreenState extends State<EditCategoryScreen> {
-  final TextEditingController _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameCtrl;
+  String _state = 'Activa';
 
   @override
-  void didChangeDependencies() {
-    final categoryService = Provider.of<CategoryService>(context, listen: false);
-    final Detalle category = categoryService.selectedCategory!;
-    _nameController.text = category.categoryName;
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
+    final c =
+        Provider.of<CategoryService>(context, listen: false).selectedCategory!;
+    _nameCtrl = TextEditingController(text: c.categoryName);
+    _state = c.categoryState;
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final categoryService = Provider.of<CategoryService>(context);
-    final isNew = categoryService.selectedCategory?.categoryId == 0;
+    final service = Provider.of<CategoryService>(context);
+    final c = service.selectedCategory!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isNew ? 'Nueva Categoría' : 'Editar Categoría'),
+        title: Text(c.categoryId == 0 ? 'Nueva Categoría' : 'Editar Categoría'),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nombre de la categoría'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Ingrese un nombre válido' : null,
+      body: service.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: ListView(children: [
+                  TextFormField(
+                    controller: _nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Nombre'),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Requerido' : null,
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButtonFormField<String>(
+                    value: _state,
+                    decoration: const InputDecoration(labelText: 'Estado'),
+                    items: const [
+                      DropdownMenuItem(value: 'Activa', child: Text('Activa')),
+                      DropdownMenuItem(value: 'Inactiva', child: Text('Inactiva')),
+                    ],
+                    onChanged: (v) => setState(() => _state = v!),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.save),
+                    label: const Text('Guardar'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+                    onPressed: () async {
+                      if (!_formKey.currentState!.validate()) return;
+                      c.categoryName = _nameCtrl.text.trim();
+                      c.categoryState = _state;
+                      await service.editOrCreateCategory(c);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  if (c.categoryId != 0) ...[
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      label:
+                          const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                      onPressed: () async {
+                        final ok = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Eliminar categoría'),
+                            content: const Text(
+                                '¿Seguro que quieres eliminar esta categoría?'),
+                            actions: [
+                              TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancelar')),
+                              TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Eliminar')),
+                            ],
+                          ),
+                        );
+                        if (ok == true) {
+                          await service.deleteCategory(c);
+                          Navigator.pop(context);
+                        }
+                      },
+                    )
+                  ]
+                ]),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () async {
-                  if (!_formKey.currentState!.validate()) return;
-
-                  final updated = Detalle(
-                    categoryId: categoryService.selectedCategory!.categoryId,
-                    categoryName: _nameController.text.trim(),
-                  );
-
-                  await categoryService.editOrCreateCategory(updated);
-                  if (mounted) Navigator.pop(context);
-                },
-                icon: const Icon(Icons.save),
-                label: Text(isNew ? 'Crear' : 'Guardar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (!isNew)
-                TextButton.icon(
-                  onPressed: () async {
-                    await categoryService.deleteCategory(
-                        categoryService.selectedCategory!, context);
-                  },
-                  icon: const Icon(Icons.delete_outline),
-                  label: const Text('Eliminar categoría'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
-                ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
